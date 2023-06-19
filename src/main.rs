@@ -16,7 +16,9 @@ async fn main() {
     let store: PgStore<PokemonAggregate> =
         PgStoreBuilder::new(pool.clone()).try_build().await.unwrap();
 
-    let command = pokemon::domain::command::Command::Capture(Capture {});
+    let command = pokemon::domain::command::Command::Capture(Capture {
+        name: "Calogero".to_string(),
+    });
 
     let manager = AggregateManager::new(store);
 

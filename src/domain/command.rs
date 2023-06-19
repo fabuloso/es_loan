@@ -4,6 +4,8 @@ pub enum Command {
     Fuck(Fuck),
 }
 
-pub struct Capture {}
+pub struct Capture {
+    pub name: String,
+}
 pub struct Release {}
 pub struct Fuck {}

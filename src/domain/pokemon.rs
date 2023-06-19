@@ -29,11 +29,15 @@ impl Aggregate for PokemonAggregate {
 
     fn handle_command(
         _state: &Self::State,
-        _command: Self::Command,
+        command: Self::Command,
     ) -> Result<Vec<Self::Event>, Self::Error> {
-        let event = PokemonEvent::PokemonCaptured(Captured {
-            nome_pokemon: "Giacobbo".to_string(),
-        });
+        let event = match command {
+            command::Command::Capture(payload) => PokemonEvent::PokemonCaptured(Captured {
+                nome_pokemon: payload.name,
+            }),
+            command::Command::Release(_) => todo!(),
+            command::Command::Fuck(_) => todo!(),
+        };
         Ok(vec![event])
     }
 
