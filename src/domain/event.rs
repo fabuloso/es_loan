@@ -1,9 +1,16 @@
-pub enum PorkemonEvent {
-    PokemonCaptured(Captured),
-    PokemonReleased(Released),
-    PokemonFucked(Fucked),
-}
+use serde::{Deserialize, Serialize};
 
-pub struct Captured {}
-pub struct Released {}
-pub struct Fucked {}
+// pub enum PokemonEvent {
+//     PokemonCaptured(Captured),
+//     PokemonReleased(Released),
+//     PokemonFucked(Fucked),
+// }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PokemonCaptured {
+    pub nome_pokemon: String,
+}
+// #[derive(Serialize, Deserialize)]
+// pub struct Released {}
+// #[derive(Serialize, Deserialize)]
+// pub struct Fucked {}
