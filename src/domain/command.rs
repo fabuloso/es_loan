@@ -7,5 +7,7 @@ pub enum Command {
 pub struct Capture {
     pub name: String,
 }
-pub struct Release {}
+pub struct Release {
+    pub name: String,
+}
 pub struct Fuck {}
