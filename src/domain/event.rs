@@ -1,16 +1,19 @@
 use serde::{Deserialize, Serialize};
 
-// pub enum PokemonEvent {
-//     PokemonCaptured(Captured),
-//     PokemonReleased(Released),
-//     PokemonFucked(Fucked),
-// }
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum PokemonEvent {
+    PokemonCaptured(Captured),
+    PokemonReleased(Released),
+    PokemonFucked(Fucked),
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct PokemonCaptured {
+pub struct Released {}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Fucked {}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Captured {
     pub nome_pokemon: String,
 }
-// #[derive(Serialize, Deserialize)]
-// pub struct Released {}
-// #[derive(Serialize, Deserialize)]
-// pub struct Fucked {}

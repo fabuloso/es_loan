@@ -1,6 +1,9 @@
 use esrs::Aggregate;
 
-use super::{command, error, event};
+use super::{
+    command, error,
+    event::{self, Captured, PokemonEvent},
+};
 
 pub struct PokemonAggregate {}
 
@@ -21,16 +24,16 @@ impl Aggregate for PokemonAggregate {
     const NAME: &'static str = "Pokemon";
     type State = PokemonState;
     type Command = command::Command;
-    type Event = event::PokemonCaptured;
+    type Event = event::PokemonEvent;
     type Error = error::CommandError;
 
     fn handle_command(
         _state: &Self::State,
         _command: Self::Command,
     ) -> Result<Vec<Self::Event>, Self::Error> {
-        let event = event::PokemonCaptured {
-            nome_pokemon: "Calogero".to_string(),
-        };
+        let event = PokemonEvent::PokemonCaptured(Captured {
+            nome_pokemon: "Giacobbo".to_string(),
+        });
         Ok(vec![event])
     }
 
