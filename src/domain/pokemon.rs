@@ -2,7 +2,7 @@ use esrs::Aggregate;
 
 use super::{
     command, error,
-    event::{self, Authorized, PokemonEvent, Released},
+    event::{self, Authorized, PokemonEvent, Setup},
 };
 
 pub struct PokemonAggregate {}
@@ -11,6 +11,8 @@ pub struct PokemonAggregate {}
 pub struct PokemonState {
     pub status: String,
     pub name: String,
+    pub bank_account: String,
+    pub braintree_token: String,
 }
 
 impl PokemonState {
@@ -18,6 +20,8 @@ impl PokemonState {
         Self {
             status: "Captured".to_string(),
             name,
+            bank_account: "".to_string(),
+            braintree_token: "".to_string(),
         }
     }
 
@@ -25,6 +29,8 @@ impl PokemonState {
         Self {
             status: "Loan Submitted".to_string(),
             name: self.name.clone(),
+            bank_account: "".to_string(),
+            braintree_token: "".to_string(),
         }
     }
 
@@ -32,6 +38,8 @@ impl PokemonState {
         Self {
             status: "Loan Created".to_string(),
             name: self.name.clone(),
+            bank_account: "".to_string(),
+            braintree_token: "".to_string(),
         }
     }
 
@@ -39,6 +47,8 @@ impl PokemonState {
         Self {
             status: "Waiting for Deposit".to_string(),
             name: self.name.clone(),
+            bank_account: "".to_string(),
+            braintree_token: "".to_string(),
         }
     }
 
@@ -46,6 +56,8 @@ impl PokemonState {
         Self {
             status: "Deposit Payed".to_string(),
             name: self.name.clone(),
+            bank_account: "".to_string(),
+            braintree_token: "".to_string(),
         }
     }
 
@@ -53,6 +65,17 @@ impl PokemonState {
         Self {
             status: "Released".to_string(),
             name: self.name.clone(),
+            bank_account: "".to_string(),
+            braintree_token: "".to_string(),
+        }
+    }
+
+    fn setup(&self, bank_account: String, braintree_token: String) -> PokemonState {
+        Self {
+            status: "Setup".to_string(),
+            name: self.name.clone(),
+            bank_account,
+            braintree_token,
         }
     }
 }
@@ -61,7 +84,9 @@ impl Default for PokemonState {
     fn default() -> Self {
         Self {
             name: "".to_string(),
-            status: "Pampurio".to_string(),
+            status: "Void".to_string(),
+            bank_account: "".to_string(),
+            braintree_token: "".to_string(),
         }
     }
 }
@@ -85,9 +110,11 @@ impl Aggregate for PokemonAggregate {
                     authorization_token: payload.authorization_token,
                 })])
             }
-            command::Command::SetupLoan(_payload) => {
-                Ok(vec![PokemonEvent::PokemonReleased(Released {})])
-            }
+            command::Command::SetupLoan(payload) => Ok(vec![PokemonEvent::LoanSetup(Setup {
+                bank_account: payload.bank_account,
+                braintree_token: payload.braintree_nonce,
+                nonce: payload.nonce,
+            })]),
             command::Command::AskForDeposit => Ok(vec![PokemonEvent::AskedForDeposit]),
             command::Command::SetDepositAsPayed => Ok(vec![PokemonEvent::DepositPayed]),
             command::Command::CreateLoan => {
@@ -99,6 +126,9 @@ impl Aggregate for PokemonAggregate {
     fn apply_event(state: Self::State, event: Self::Event) -> Self::State {
         match event {
             PokemonEvent::LoanAuthorized(payload) => state.captured(payload.product),
+            PokemonEvent::LoanSetup(payload) => {
+                state.setup(payload.bank_account, payload.braintree_token)
+            }
             PokemonEvent::PokemonReleased(_) => state.released(),
             PokemonEvent::PokemonFucked(_) => todo!(),
             PokemonEvent::AskedForDeposit => state.asked_for_deposit(),

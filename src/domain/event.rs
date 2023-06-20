@@ -4,6 +4,7 @@ use uuid::Uuid;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum PokemonEvent {
     LoanAuthorized(Authorized),
+    LoanSetup(Setup),
     PokemonReleased(Released),
     PokemonFucked(Fucked),
     AskedForDeposit,
@@ -23,4 +24,11 @@ pub struct Authorized {
     pub product: String,
     pub amount: u16,
     pub authorization_token: Uuid,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Setup {
+    pub bank_account: String,
+    pub braintree_token: String,
+    pub nonce: Uuid,
 }

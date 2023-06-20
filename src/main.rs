@@ -4,10 +4,14 @@ use pokemon::domain::command::Command::AskForDeposit;
 use pokemon::domain::command::Command::AuthorizeLoan;
 use pokemon::domain::command::Command::CreateLoan;
 use pokemon::domain::command::Command::SetDepositAsPayed;
+use pokemon::domain::command::Command::SetupLoan;
+use pokemon::domain::command::Setup;
 use pokemon::domain::pokemon::PokemonAggregate;
 use pokemon::domain::pokemon::PokemonState;
 use pokemon::handler::authorization_view::AuthorizationView;
 use pokemon::handler::authorization_view_listener::AuthorizationViewListener;
+use pokemon::handler::setup_view::SetupView;
+use pokemon::handler::setup_view_listener::SetupViewListener;
 use sqlx::postgres::PgPoolOptions;
 
 use sqlx::{Pool, Postgres};
@@ -19,13 +23,21 @@ use uuid::Uuid;
 #[tokio::main]
 async fn main() {
     let pool: Pool<Postgres> = new_pool().await;
+    let view = SetupView::new("SETUP_VIEW", &pool).await;
+    let setup_listener = SetupViewListener {
+        pool: pool.clone(),
+        view: view.clone(),
+    };
+
     let view = AuthorizationView::new("AUTHORIZATION_VIEW", &pool).await;
     let auth_listener = AuthorizationViewListener {
         pool: pool.clone(),
-        view,
+        view: view.clone(),
     };
+
     let store: PgStore<PokemonAggregate> = PgStoreBuilder::new(pool.clone())
         .add_event_handler(auth_listener)
+        .add_event_handler(setup_listener)
         .try_build()
         .await
         .unwrap();
@@ -34,17 +46,10 @@ async fn main() {
     let manager = AggregateManager::new(store);
 
     let aggregate_id: Uuid = Uuid::new_v4();
-    let state: AggregateState<PokemonState> = AggregateState::with_id(aggregate_id);
 
-    let authorization_token: Uuid = Uuid::new_v4();
+    let auth_token = Steps::authorize(&manager, aggregate_id).await;
 
-    let authorize = AuthorizeLoan(Authorize {
-        amount: 1000,
-        product: "pol-1234".to_string(),
-        authorization_token,
-    });
-
-    let _ = manager.handle_command(state, authorize).await;
+    Steps::setup(&manager, &view, auth_token, pool).await;
 
     Steps::pay_deposit(&manager, aggregate_id).await;
     Steps::create_loan(&manager, aggregate_id).await;
@@ -53,6 +58,43 @@ async fn main() {
 struct Steps;
 
 impl Steps {
+    pub async fn authorize(
+        manager: &AggregateManager<PgStore<PokemonAggregate>>,
+        aggregate_id: Uuid,
+    ) -> Uuid {
+        let state: AggregateState<PokemonState> = AggregateState::with_id(aggregate_id);
+
+        let authorization_token: Uuid = Uuid::new_v4();
+
+        let authorize = AuthorizeLoan(Authorize {
+            amount: 1000,
+            product: "pol-1234".to_string(),
+            authorization_token,
+        });
+
+        let _ = manager.handle_command(state, authorize).await;
+
+        authorization_token
+    }
+
+    pub async fn setup(
+        manager: &AggregateManager<PgStore<PokemonAggregate>>,
+        view: &AuthorizationView,
+        auth_token: Uuid,
+        pool: Pool<Postgres>,
+    ) {
+        let row = view.by_token(auth_token, &pool).await.unwrap().unwrap();
+        let state = manager.load(row.id).await.unwrap().unwrap();
+        let nonce = Uuid::new_v4();
+        let setup = SetupLoan(Setup {
+            bank_account: "BCE".to_string(),
+            braintree_nonce: "NONCE".to_string(),
+            nonce,
+        });
+
+        let _ = manager.handle_command(state, setup).await;
+    }
+
     pub async fn pay_deposit(
         manager: &AggregateManager<PgStore<PokemonAggregate>>,
         aggregate_id: Uuid,
@@ -97,7 +139,7 @@ impl Steps {
 
         let command = CreateLoan;
 
-        let result = manager.handle_command(state, command).await;
+        let _ = manager.handle_command(state, command).await;
     }
 }
 

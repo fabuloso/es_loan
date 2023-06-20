@@ -14,6 +14,8 @@ pub struct Authorize {
     pub authorization_token: Uuid,
 }
 pub struct Setup {
-    pub name: String,
+    pub bank_account: String,
+    pub braintree_nonce: String,
+    pub nonce: Uuid,
 }
 pub struct Buy {}

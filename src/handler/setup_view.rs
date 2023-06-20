@@ -2,24 +2,27 @@ use sqlx::{Executor, Pool, Postgres};
 use uuid::Uuid;
 
 #[derive(sqlx::FromRow, Debug)]
-pub struct AuthorizationViewRow {
+pub struct SetupViewRow {
     pub id: Uuid,
     pub token: Uuid,
+    pub nonce: Uuid,
     pub amount: String,
     pub product: String,
+    pub bank_account: String,
+    pub braintree_token: String,
 }
 
 #[derive(Clone)]
-pub struct AuthorizationView {
+pub struct SetupView {
     table_name: String,
 }
 
-impl AuthorizationView {
+impl SetupView {
     pub async fn new(table_name: &str, pool: &Pool<Postgres>) -> Self {
         let table_name: String = format!("{}_{}", "culo", table_name);
 
         let query: String = format!(
-            "CREATE TABLE IF NOT EXISTS {} (id uuid PRIMARY KEY NOT NULL, token uuid, amount VARCHAR, product VARCHAR)",
+            "CREATE TABLE IF NOT EXISTS {} (id uuid PRIMARY KEY NOT NULL,nonce uuid, token uuid, amount VARCHAR, product VARCHAR, bank_account VARCHAR, braintree_token VARCHAR)",
             table_name
         );
 
@@ -28,20 +31,20 @@ impl AuthorizationView {
         Self { table_name }
     }
 
-    pub async fn by_token(
+    pub async fn by_nonce(
         &self,
-        token: Uuid,
+        nonce: Uuid,
         executor: impl Executor<'_, Database = Postgres>,
-    ) -> Result<Option<AuthorizationViewRow>, sqlx::Error> {
-        let query: String = format!("SELECT * FROM {} WHERE token = $1", &self.table_name);
+    ) -> Result<Option<SetupViewRow>, sqlx::Error> {
+        let query: String = format!("SELECT * FROM {} WHERE nonce = $1", &self.table_name);
 
-        sqlx::query_as::<_, AuthorizationViewRow>(query.as_str())
-            .bind(token)
+        sqlx::query_as::<_, SetupViewRow>(query.as_str())
+            .bind(nonce)
             .fetch_optional(executor)
             .await
     }
 
-    pub async fn upsert(
+    pub async fn authorize(
         &self,
         id: Uuid,
         token: Uuid,
@@ -59,6 +62,29 @@ impl AuthorizationView {
             .bind(token)
             .bind(amount)
             .bind(product)
+            .fetch_optional(executor)
+            .await
+            .map(|_| ())
+    }
+
+    pub async fn setup(
+        &self,
+        id: Uuid,
+        nonce: Uuid,
+        bank_account: String,
+        braintree_token: String,
+        executor: impl Executor<'_, Database = Postgres>,
+    ) -> Result<(), sqlx::Error> {
+        let query = format!(
+            "INSERT INTO {0} (id, nonce, bank_account, braintree_token) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO UPDATE SET nonce = $2, bank_account = $3, braintree_token =$4;",
+            &self.table_name
+        );
+
+        sqlx::query(query.as_str())
+            .bind(id)
+            .bind(nonce)
+            .bind(bank_account)
+            .bind(braintree_token)
             .fetch_optional(executor)
             .await
             .map(|_| ())
