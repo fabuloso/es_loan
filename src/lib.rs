@@ -1,2 +1,2 @@
 pub mod domain;
-mod service;
+pub mod handler;

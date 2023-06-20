@@ -6,6 +6,8 @@ use pokemon::domain::command::Command::CreateLoan;
 use pokemon::domain::command::Command::SetDepositAsPayed;
 use pokemon::domain::pokemon::PokemonAggregate;
 use pokemon::domain::pokemon::PokemonState;
+use pokemon::handler::authorization_view::AuthorizationView;
+use pokemon::handler::authorization_view_listener::AuthorizationViewListener;
 use sqlx::postgres::PgPoolOptions;
 
 use sqlx::{Pool, Postgres};
@@ -17,17 +19,29 @@ use uuid::Uuid;
 #[tokio::main]
 async fn main() {
     let pool: Pool<Postgres> = new_pool().await;
-
-    let store: PgStore<PokemonAggregate> =
-        PgStoreBuilder::new(pool.clone()).try_build().await.unwrap();
+    let view = AuthorizationView::new("AUTHORIZATION_VIEW", &pool).await;
+    let auth_listener = AuthorizationViewListener {
+        pool: pool.clone(),
+        view,
+    };
+    let store: PgStore<PokemonAggregate> = PgStoreBuilder::new(pool.clone())
+        .add_event_handler(auth_listener)
+        .try_build()
+        .await
+        .unwrap();
     // Convalidare l'univocita' del comando
     // Come gestiamo la saga
     let manager = AggregateManager::new(store);
+
     let aggregate_id: Uuid = Uuid::new_v4();
     let state: AggregateState<PokemonState> = AggregateState::with_id(aggregate_id);
 
+    let authorization_token: Uuid = Uuid::new_v4();
+
     let authorize = AuthorizeLoan(Authorize {
-        name: "Calogero".to_string(),
+        amount: 1000,
+        product: "pol-1234".to_string(),
+        authorization_token,
     });
 
     let _ = manager.handle_command(state, authorize).await;

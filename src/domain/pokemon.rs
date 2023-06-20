@@ -1,15 +1,11 @@
 use esrs::Aggregate;
 
-use crate::service::payer::Payer;
-
 use super::{
     command, error,
-    event::{self, Captured, PokemonEvent, Released},
+    event::{self, Authorized, PokemonEvent, Released},
 };
 
-pub struct PokemonAggregate {
-    payer: Box<dyn Payer>,
-}
+pub struct PokemonAggregate {}
 
 #[derive(Clone, Debug)]
 pub struct PokemonState {
@@ -83,8 +79,10 @@ impl Aggregate for PokemonAggregate {
     ) -> Result<Vec<Self::Event>, Self::Error> {
         match command {
             command::Command::AuthorizeLoan(payload) => {
-                Ok(vec![PokemonEvent::PokemonCaptured(Captured {
-                    nome_pokemon: payload.name,
+                Ok(vec![PokemonEvent::LoanAuthorized(Authorized {
+                    product: payload.product,
+                    amount: payload.amount,
+                    authorization_token: payload.authorization_token,
                 })])
             }
             command::Command::SetupLoan(_payload) => {
@@ -100,7 +98,7 @@ impl Aggregate for PokemonAggregate {
 
     fn apply_event(state: Self::State, event: Self::Event) -> Self::State {
         match event {
-            PokemonEvent::PokemonCaptured(payload) => state.captured(payload.nome_pokemon),
+            PokemonEvent::LoanAuthorized(payload) => state.captured(payload.product),
             PokemonEvent::PokemonReleased(_) => state.released(),
             PokemonEvent::PokemonFucked(_) => todo!(),
             PokemonEvent::AskedForDeposit => state.asked_for_deposit(),

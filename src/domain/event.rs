@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum PokemonEvent {
-    PokemonCaptured(Captured),
+    LoanAuthorized(Authorized),
     PokemonReleased(Released),
     PokemonFucked(Fucked),
     AskedForDeposit,
@@ -18,6 +19,8 @@ pub struct Released {}
 pub struct Fucked {}
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Captured {
-    pub nome_pokemon: String,
+pub struct Authorized {
+    pub product: String,
+    pub amount: u16,
+    pub authorization_token: Uuid,
 }

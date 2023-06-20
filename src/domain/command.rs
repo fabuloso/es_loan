@@ -1,3 +1,5 @@
+use uuid::Uuid;
+
 pub enum Command {
     AuthorizeLoan(Authorize),
     SetupLoan(Setup),
@@ -7,7 +9,9 @@ pub enum Command {
 }
 
 pub struct Authorize {
-    pub name: String,
+    pub amount: u16,
+    pub product: String,
+    pub authorization_token: Uuid,
 }
 pub struct Setup {
     pub name: String,
