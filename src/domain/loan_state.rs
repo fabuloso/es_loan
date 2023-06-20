@@ -1,4 +1,4 @@
-use chrono::{Duration, Local, NaiveDateTime, Utc};
+use chrono::{Duration, Local, NaiveDateTime};
 
 #[derive(Clone, Debug)]
 pub struct LoanState {

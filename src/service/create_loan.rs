@@ -33,7 +33,7 @@ impl CreateLoanService {
             let _ = self.manager.handle_command(loan, AskForDeposit).await;
         }
 
-        if let Err(_) = self.cash.charge(row.amount) {
+        if self.cash.charge(row.amount).is_err() {
             anyhow::bail!("Houston we got a problem!");
         }
 

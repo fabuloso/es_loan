@@ -17,20 +17,17 @@ pub struct AuthorizationViewListener {
 #[async_trait]
 impl EventHandler<LoanAggregate> for AuthorizationViewListener {
     async fn handle(&self, event: &StoreEvent<LoanEvent>) {
-        match event.payload() {
-            LoanEvent::LoanAuthorized(payload) => {
-                let _ = self
-                    .view
-                    .upsert(
-                        event.aggregate_id,
-                        payload.authorization_token,
-                        payload.amount.to_string(),
-                        payload.product.clone(),
-                        &self.pool,
-                    )
-                    .await;
-            }
-            _ => (),
+        if let LoanEvent::LoanAuthorized(payload) = event.payload() {
+            let _ = self
+                .view
+                .upsert(
+                    event.aggregate_id,
+                    payload.authorization_token,
+                    payload.amount.to_string(),
+                    payload.product.clone(),
+                    &self.pool,
+                )
+                .await;
         }
     }
 

@@ -35,7 +35,7 @@ impl EventHandler<LoanAggregate> for SetupViewListener {
                     .view
                     .setup(
                         event.aggregate_id,
-                        payload.nonce.clone(),
+                        payload.nonce,
                         payload.bank_account.clone(),
                         payload.braintree_token.clone(),
                         &self.pool,
