@@ -1,3 +1,4 @@
+use es_loan::domain::aggregate::LoanAggregate;
 use es_loan::domain::command::Authorize;
 use es_loan::domain::command::Command::AskForDeposit;
 use es_loan::domain::command::Command::AskForLoan;
@@ -6,7 +7,6 @@ use es_loan::domain::command::Command::SetDepositAsPayed;
 use es_loan::domain::command::Command::SetLoanAsCreated;
 use es_loan::domain::command::Command::SetupLoan;
 use es_loan::domain::command::Setup;
-use es_loan::domain::loan::LoanAggregate;
 use es_loan::domain::loan_state::LoanState;
 use es_loan::handler::authorization_view::AuthorizationView;
 use es_loan::handler::authorization_view_listener::AuthorizationViewListener;

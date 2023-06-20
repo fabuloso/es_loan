@@ -4,7 +4,7 @@ use esrs::store::StoreEvent;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
-use crate::domain::{event::LoanEvent, loan::LoanAggregate};
+use crate::domain::{aggregate::LoanAggregate, event::LoanEvent};
 
 use super::authorization_view::AuthorizationView;
 
