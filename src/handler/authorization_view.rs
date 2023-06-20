@@ -16,7 +16,7 @@ pub struct AuthorizationView {
 
 impl AuthorizationView {
     pub async fn new(table_name: &str, pool: &Pool<Postgres>) -> Self {
-        let table_name: String = format!("{}_{}", "culo", table_name);
+        let table_name: String = format!("{}_{}", "example", table_name);
 
         let query: String = format!(
             "CREATE TABLE IF NOT EXISTS {} (id uuid PRIMARY KEY NOT NULL, token uuid, amount VARCHAR, product VARCHAR)",

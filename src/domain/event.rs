@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum PokemonEvent {
+pub enum LoanEvent {
     LoanAuthorized(Authorized),
     LoanSetup(Setup),
     PokemonReleased(Released),

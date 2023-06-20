@@ -7,8 +7,8 @@ use pokemon::domain::command::Command::SetDepositAsPayed;
 use pokemon::domain::command::Command::SetLoanAsCreated;
 use pokemon::domain::command::Command::SetupLoan;
 use pokemon::domain::command::Setup;
-use pokemon::domain::pokemon::PokemonAggregate;
-use pokemon::domain::pokemon::PokemonState;
+use pokemon::domain::loan::LoanAggregate;
+use pokemon::domain::loan::LoanState;
 use pokemon::handler::authorization_view::AuthorizationView;
 use pokemon::handler::authorization_view_listener::AuthorizationViewListener;
 use pokemon::handler::setup_view::SetupView;
@@ -36,7 +36,7 @@ async fn main() {
         view: view.clone(),
     };
 
-    let store: PgStore<PokemonAggregate> = PgStoreBuilder::new(pool.clone())
+    let store: PgStore<LoanAggregate> = PgStoreBuilder::new(pool.clone())
         .add_event_handler(auth_listener)
         .add_event_handler(setup_listener)
         .try_build()
@@ -57,10 +57,10 @@ struct Steps;
 
 impl Steps {
     pub async fn authorize(
-        manager: &AggregateManager<PgStore<PokemonAggregate>>,
+        manager: &AggregateManager<PgStore<LoanAggregate>>,
         aggregate_id: Uuid,
     ) -> Uuid {
-        let state: AggregateState<PokemonState> = AggregateState::with_id(aggregate_id);
+        let state: AggregateState<LoanState> = AggregateState::with_id(aggregate_id);
 
         let authorization_token: Uuid = Uuid::new_v4();
 
@@ -76,7 +76,7 @@ impl Steps {
     }
 
     pub async fn setup(
-        manager: &AggregateManager<PgStore<PokemonAggregate>>,
+        manager: &AggregateManager<PgStore<LoanAggregate>>,
         view: &AuthorizationView,
         auth_token: Uuid,
         pool: Pool<Postgres>,
@@ -95,7 +95,7 @@ impl Steps {
     }
 
     pub async fn create_loan(
-        manager: &AggregateManager<PgStore<PokemonAggregate>>,
+        manager: &AggregateManager<PgStore<LoanAggregate>>,
         view: &SetupView,
         nonce: Uuid,
         pool: Pool<Postgres>,
@@ -126,7 +126,7 @@ impl Steps {
     }
 
     pub async fn pay_deposit(
-        manager: &AggregateManager<PgStore<PokemonAggregate>>,
+        manager: &AggregateManager<PgStore<LoanAggregate>>,
         aggregate_id: Uuid,
     ) {
         Self::ask_for_deposit(manager, aggregate_id).await;
@@ -134,7 +134,7 @@ impl Steps {
     }
 
     async fn ask_for_deposit(
-        manager: &AggregateManager<PgStore<PokemonAggregate>>,
+        manager: &AggregateManager<PgStore<LoanAggregate>>,
         aggregate_id: Uuid,
     ) {
         let state = manager.load(aggregate_id).await.unwrap().unwrap();
@@ -147,7 +147,7 @@ impl Steps {
     }
 
     async fn set_as_payed_deposit(
-        manager: &AggregateManager<PgStore<PokemonAggregate>>,
+        manager: &AggregateManager<PgStore<LoanAggregate>>,
         aggregate_id: Uuid,
     ) {
         let state = manager.load(aggregate_id).await.unwrap().unwrap();

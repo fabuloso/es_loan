@@ -4,7 +4,7 @@ use esrs::store::StoreEvent;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
-use crate::domain::{event::PokemonEvent, pokemon::PokemonAggregate};
+use crate::domain::{event::LoanEvent, loan::LoanAggregate};
 
 use super::setup_view::SetupView;
 
@@ -15,10 +15,10 @@ pub struct SetupViewListener {
 }
 
 #[async_trait]
-impl EventHandler<PokemonAggregate> for SetupViewListener {
-    async fn handle(&self, event: &StoreEvent<PokemonEvent>) {
+impl EventHandler<LoanAggregate> for SetupViewListener {
+    async fn handle(&self, event: &StoreEvent<LoanEvent>) {
         match event.payload() {
-            PokemonEvent::LoanAuthorized(payload) => {
+            LoanEvent::LoanAuthorized(payload) => {
                 let _ = self
                     .view
                     .authorize(
@@ -30,7 +30,7 @@ impl EventHandler<PokemonAggregate> for SetupViewListener {
                     )
                     .await;
             }
-            PokemonEvent::LoanSetup(payload) => {
+            LoanEvent::LoanSetup(payload) => {
                 let _ = self
                     .view
                     .setup(

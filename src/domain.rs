@@ -1,4 +1,4 @@
 pub mod command;
 mod error;
 pub mod event;
-pub mod pokemon;
+pub mod loan;

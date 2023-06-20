@@ -2,20 +2,20 @@ use esrs::Aggregate;
 
 use super::{
     command, error,
-    event::{self, Authorized, PokemonEvent, Setup},
+    event::{self, Authorized, LoanEvent, Setup},
 };
 
-pub struct PokemonAggregate {}
+pub struct LoanAggregate {}
 
 #[derive(Clone, Debug)]
-pub struct PokemonState {
+pub struct LoanState {
     pub status: String,
     pub name: String,
     pub bank_account: String,
     pub braintree_token: String,
 }
 
-impl PokemonState {
+impl LoanState {
     pub fn is_waiting_for_deposit(&self) -> bool {
         self.status == "Waiting for Deposit"
     }
@@ -86,7 +86,7 @@ impl PokemonState {
         }
     }
 
-    fn setup(&self, bank_account: String, braintree_token: String) -> PokemonState {
+    fn setup(&self, bank_account: String, braintree_token: String) -> LoanState {
         Self {
             status: "Setup".to_string(),
             name: self.name.clone(),
@@ -96,7 +96,7 @@ impl PokemonState {
     }
 }
 
-impl Default for PokemonState {
+impl Default for LoanState {
     fn default() -> Self {
         Self {
             name: "".to_string(),
@@ -107,11 +107,11 @@ impl Default for PokemonState {
     }
 }
 
-impl Aggregate for PokemonAggregate {
+impl Aggregate for LoanAggregate {
     const NAME: &'static str = "Pokemon";
-    type State = PokemonState;
+    type State = LoanState;
     type Command = command::Command;
-    type Event = event::PokemonEvent;
+    type Event = event::LoanEvent;
     type Error = error::CommandError;
 
     fn handle_command(
@@ -120,36 +120,36 @@ impl Aggregate for PokemonAggregate {
     ) -> Result<Vec<Self::Event>, Self::Error> {
         match command {
             command::Command::AuthorizeLoan(payload) => {
-                Ok(vec![PokemonEvent::LoanAuthorized(Authorized {
+                Ok(vec![LoanEvent::LoanAuthorized(Authorized {
                     product: payload.product,
                     amount: payload.amount,
                     authorization_token: payload.authorization_token,
                 })])
             }
-            command::Command::SetupLoan(payload) => Ok(vec![PokemonEvent::LoanSetup(Setup {
+            command::Command::SetupLoan(payload) => Ok(vec![LoanEvent::LoanSetup(Setup {
                 bank_account: payload.bank_account,
                 braintree_token: payload.braintree_nonce,
                 nonce: payload.nonce,
             })]),
-            command::Command::AskForDeposit => Ok(vec![PokemonEvent::AskedForDeposit]),
-            command::Command::SetDepositAsPayed => Ok(vec![PokemonEvent::DepositPayed]),
-            command::Command::AskForLoan => Ok(vec![PokemonEvent::LoanSubmitted]),
-            command::Command::SetLoanAsCreated => Ok(vec![PokemonEvent::LoanCreated]),
+            command::Command::AskForDeposit => Ok(vec![LoanEvent::AskedForDeposit]),
+            command::Command::SetDepositAsPayed => Ok(vec![LoanEvent::DepositPayed]),
+            command::Command::AskForLoan => Ok(vec![LoanEvent::LoanSubmitted]),
+            command::Command::SetLoanAsCreated => Ok(vec![LoanEvent::LoanCreated]),
         }
     }
 
     fn apply_event(state: Self::State, event: Self::Event) -> Self::State {
         match event {
-            PokemonEvent::LoanAuthorized(payload) => state.captured(payload.product),
-            PokemonEvent::LoanSetup(payload) => {
+            LoanEvent::LoanAuthorized(payload) => state.captured(payload.product),
+            LoanEvent::LoanSetup(payload) => {
                 state.setup(payload.bank_account, payload.braintree_token)
             }
-            PokemonEvent::PokemonReleased(_) => state.released(),
-            PokemonEvent::PokemonFucked(_) => todo!(),
-            PokemonEvent::AskedForDeposit => state.asked_for_deposit(),
-            PokemonEvent::DepositPayed => state.deposit_payed(),
-            PokemonEvent::LoanSubmitted => state.loan_submitted(),
-            PokemonEvent::LoanCreated => state.loan_created(),
+            LoanEvent::PokemonReleased(_) => state.released(),
+            LoanEvent::PokemonFucked(_) => todo!(),
+            LoanEvent::AskedForDeposit => state.asked_for_deposit(),
+            LoanEvent::DepositPayed => state.deposit_payed(),
+            LoanEvent::LoanSubmitted => state.loan_submitted(),
+            LoanEvent::LoanCreated => state.loan_created(),
         }
     }
 }
