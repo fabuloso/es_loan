@@ -13,8 +13,9 @@ pub struct SetupLoanService {
     pub view: AuthorizationView,
     pub pool: Pool<Postgres>,
 }
+
 impl SetupLoanService {
-    pub async fn setup(&self, auth_token: Uuid) -> Uuid {
+    pub async fn setup(&self, auth_token: Uuid, bank_account: String) -> anyhow::Result<Uuid> {
         let row = self
             .view
             .by_token(auth_token, &self.pool)
@@ -22,15 +23,20 @@ impl SetupLoanService {
             .unwrap()
             .unwrap();
         let state = self.manager.load(row.id).await.unwrap().unwrap();
+
+        if state.inner().is_setup() {
+            anyhow::bail!("This loan has already been setup")
+        }
+
         let nonce = Uuid::new_v4();
 
         let setup = SetupLoan(Setup {
-            bank_account: "BCE".to_string(),
+            bank_account,
             braintree_nonce: "NONCE".to_string(),
             nonce,
         });
 
         let _ = self.manager.handle_command(state, setup).await;
-        nonce
+        Ok(nonce)
     }
 }

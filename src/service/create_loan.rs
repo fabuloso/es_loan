@@ -10,14 +10,17 @@ use uuid::Uuid;
 
 use crate::{domain::aggregate::LoanAggregate, handler::setup_view::SetupView};
 
+use super::cash::Cash;
+
 pub struct CreateLoanService {
     pub manager: Arc<AggregateManager<PgStore<LoanAggregate>>>,
     pub view: SetupView,
     pub pool: Pool<Postgres>,
+    pub cash: Cash,
 }
 
 impl CreateLoanService {
-    pub async fn create_loan(&self, nonce: Uuid) -> Uuid {
+    pub async fn create_loan(&self, nonce: Uuid) -> anyhow::Result<Uuid> {
         let row = self
             .view
             .by_nonce(nonce, &self.pool)
@@ -28,6 +31,10 @@ impl CreateLoanService {
         let loan = self.manager.load(row.id).await.unwrap().unwrap();
         if loan.inner().is_not_already_payed() {
             let _ = self.manager.handle_command(loan, AskForDeposit).await;
+        }
+
+        if let Err(_) = self.cash.charge(row.amount) {
+            anyhow::bail!("Houston we got a problem!");
         }
 
         let loan = self.manager.load(row.id).await.unwrap().unwrap();
@@ -45,6 +52,6 @@ impl CreateLoanService {
             let _ = self.manager.handle_command(loan, SetLoanAsCreated).await;
         }
 
-        row.id
+        Ok(row.id)
     }
 }

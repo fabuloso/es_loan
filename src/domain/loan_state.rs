@@ -85,6 +85,10 @@ impl LoanState {
             braintree_token,
         }
     }
+
+    pub fn is_setup(&self) -> bool {
+        self.status == "Setup"
+    }
 }
 
 impl Default for LoanState {
