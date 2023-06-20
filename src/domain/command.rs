@@ -1,13 +1,15 @@
 pub enum Command {
-    Capture(Capture),
-    Release(Release),
-    Fuck(Fuck),
+    AuthorizeLoan(Authorize),
+    SetupLoan(Setup),
+    AskForDeposit,
+    SetDepositAsPayed,
+    CreateLoan,
 }
 
-pub struct Capture {
+pub struct Authorize {
     pub name: String,
 }
-pub struct Release {
+pub struct Setup {
     pub name: String,
 }
-pub struct Fuck {}
+pub struct Buy {}

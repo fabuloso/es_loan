@@ -1,11 +1,15 @@
 use esrs::Aggregate;
 
+use crate::service::payer::Payer;
+
 use super::{
     command, error,
     event::{self, Captured, PokemonEvent, Released},
 };
 
-pub struct PokemonAggregate {}
+pub struct PokemonAggregate {
+    payer: Box<dyn Payer>,
+}
 
 #[derive(Clone, Debug)]
 pub struct PokemonState {
@@ -18,6 +22,34 @@ impl PokemonState {
         Self {
             status: "Captured".to_string(),
             name,
+        }
+    }
+
+    pub fn loan_submitted(&self) -> Self {
+        Self {
+            status: "Loan Submitted".to_string(),
+            name: self.name.clone(),
+        }
+    }
+
+    pub fn loan_created(&self) -> Self {
+        Self {
+            status: "Loan Created".to_string(),
+            name: self.name.clone(),
+        }
+    }
+
+    pub fn asked_for_deposit(&self) -> Self {
+        Self {
+            status: "Waiting for Deposit".to_string(),
+            name: self.name.clone(),
+        }
+    }
+
+    pub fn deposit_payed(&self) -> Self {
+        Self {
+            status: "Deposit Payed".to_string(),
+            name: self.name.clone(),
         }
     }
 
@@ -49,14 +81,21 @@ impl Aggregate for PokemonAggregate {
         _state: &Self::State,
         command: Self::Command,
     ) -> Result<Vec<Self::Event>, Self::Error> {
-        let event = match command {
-            command::Command::Capture(payload) => PokemonEvent::PokemonCaptured(Captured {
-                nome_pokemon: payload.name,
-            }),
-            command::Command::Release(_payload) => PokemonEvent::PokemonReleased(Released {}),
-            command::Command::Fuck(_) => todo!(),
-        };
-        Ok(vec![event])
+        match command {
+            command::Command::AuthorizeLoan(payload) => {
+                Ok(vec![PokemonEvent::PokemonCaptured(Captured {
+                    nome_pokemon: payload.name,
+                })])
+            }
+            command::Command::SetupLoan(_payload) => {
+                Ok(vec![PokemonEvent::PokemonReleased(Released {})])
+            }
+            command::Command::AskForDeposit => Ok(vec![PokemonEvent::AskedForDeposit]),
+            command::Command::SetDepositAsPayed => Ok(vec![PokemonEvent::DepositPayed]),
+            command::Command::CreateLoan => {
+                Ok(vec![PokemonEvent::LoanSubmitted, PokemonEvent::LoanCreated])
+            }
+        }
     }
 
     fn apply_event(state: Self::State, event: Self::Event) -> Self::State {
@@ -64,6 +103,10 @@ impl Aggregate for PokemonAggregate {
             PokemonEvent::PokemonCaptured(payload) => state.captured(payload.nome_pokemon),
             PokemonEvent::PokemonReleased(_) => state.released(),
             PokemonEvent::PokemonFucked(_) => todo!(),
+            PokemonEvent::AskedForDeposit => state.asked_for_deposit(),
+            PokemonEvent::DepositPayed => state.deposit_payed(),
+            PokemonEvent::LoanSubmitted => state.loan_submitted(),
+            PokemonEvent::LoanCreated => state.loan_created(),
         }
     }
 }

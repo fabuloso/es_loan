@@ -5,6 +5,10 @@ pub enum PokemonEvent {
     PokemonCaptured(Captured),
     PokemonReleased(Released),
     PokemonFucked(Fucked),
+    AskedForDeposit,
+    DepositPayed,
+    LoanSubmitted,
+    LoanCreated,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
