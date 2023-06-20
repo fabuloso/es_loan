@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use std::{thread, time};
 
 use es_loan::domain::aggregate::LoanAggregate;
 use es_loan::handler::authorization_view::AuthorizationView;
@@ -44,6 +45,8 @@ async fn main() {
     let token = authorize_service
         .authorize(1222, "policy-2".to_string())
         .await;
+
+    thread::sleep(time::Duration::from_secs(15));
 
     let nonce = setup_service
         .setup(token, "My_Bank".to_string())

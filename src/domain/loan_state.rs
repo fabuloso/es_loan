@@ -1,12 +1,18 @@
+use chrono::{Duration, Local, NaiveDateTime, Utc};
+
 #[derive(Clone, Debug)]
 pub struct LoanState {
     pub status: String,
     pub name: String,
     pub bank_account: String,
     pub braintree_token: String,
+    pub auth_datetime: NaiveDateTime,
 }
 
 impl LoanState {
+    pub fn is_authorization_expired(&self) -> bool {
+        self.auth_datetime + Duration::seconds(10) > Local::now().naive_local()
+    }
     pub fn is_waiting_for_deposit(&self) -> bool {
         self.status == "Waiting for Deposit"
     }
@@ -23,12 +29,13 @@ impl LoanState {
         self.status == "Setup"
     }
 
-    pub fn captured(&self, name: String) -> Self {
+    pub fn authorize(&self, name: String) -> Self {
         Self {
             status: "Captured".to_string(),
             name,
             bank_account: "".to_string(),
             braintree_token: "".to_string(),
+            auth_datetime: Local::now().naive_local(),
         }
     }
 
@@ -38,6 +45,7 @@ impl LoanState {
             name: self.name.clone(),
             bank_account: "".to_string(),
             braintree_token: "".to_string(),
+            auth_datetime: self.auth_datetime,
         }
     }
 
@@ -47,6 +55,7 @@ impl LoanState {
             name: self.name.clone(),
             bank_account: "".to_string(),
             braintree_token: "".to_string(),
+            auth_datetime: self.auth_datetime,
         }
     }
 
@@ -56,6 +65,7 @@ impl LoanState {
             name: self.name.clone(),
             bank_account: "".to_string(),
             braintree_token: "".to_string(),
+            auth_datetime: self.auth_datetime,
         }
     }
 
@@ -65,6 +75,7 @@ impl LoanState {
             name: self.name.clone(),
             bank_account: "".to_string(),
             braintree_token: "".to_string(),
+            auth_datetime: self.auth_datetime,
         }
     }
 
@@ -74,6 +85,7 @@ impl LoanState {
             name: self.name.clone(),
             bank_account: "".to_string(),
             braintree_token: "".to_string(),
+            auth_datetime: self.auth_datetime,
         }
     }
 
@@ -83,6 +95,7 @@ impl LoanState {
             name: self.name.clone(),
             bank_account,
             braintree_token,
+            auth_datetime: self.auth_datetime,
         }
     }
 
@@ -98,6 +111,7 @@ impl Default for LoanState {
             status: "Void".to_string(),
             bank_account: "".to_string(),
             braintree_token: "".to_string(),
+            auth_datetime: NaiveDateTime::default(),
         }
     }
 }

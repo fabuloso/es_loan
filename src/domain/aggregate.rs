@@ -41,7 +41,7 @@ impl Aggregate for LoanAggregate {
 
     fn apply_event(state: Self::State, event: Self::Event) -> Self::State {
         match event {
-            LoanEvent::LoanAuthorized(payload) => state.captured(payload.product),
+            LoanEvent::LoanAuthorized(payload) => state.authorize(payload.product),
             LoanEvent::LoanSetup(payload) => {
                 state.setup(payload.bank_account, payload.braintree_token)
             }

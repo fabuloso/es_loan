@@ -24,6 +24,10 @@ impl SetupLoanService {
             .unwrap();
         let state = self.manager.load(row.id).await.unwrap().unwrap();
 
+        if state.inner().is_authorization_expired() {
+            anyhow::bail!("Authorization is expired")
+        }
+
         if state.inner().is_setup() {
             anyhow::bail!("This loan has already been setup")
         }
