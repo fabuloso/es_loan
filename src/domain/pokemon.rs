@@ -20,6 +20,14 @@ impl PokemonState {
         self.status == "Waiting for Deposit"
     }
 
+    pub fn is_waiting_for_loan(&self) -> bool {
+        self.status == "Loan Submitted"
+    }
+
+    pub fn is_deposit_payed(&self) -> bool {
+        self.status == "Deposit Payed"
+    }
+
     pub fn is_not_already_payed(&self) -> bool {
         self.status == "Setup"
     }

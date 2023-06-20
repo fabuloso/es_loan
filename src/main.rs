@@ -1,8 +1,10 @@
 use esrs::AggregateState;
 use pokemon::domain::command::Authorize;
 use pokemon::domain::command::Command::AskForDeposit;
+use pokemon::domain::command::Command::AskForLoan;
 use pokemon::domain::command::Command::AuthorizeLoan;
 use pokemon::domain::command::Command::SetDepositAsPayed;
+use pokemon::domain::command::Command::SetLoanAsCreated;
 use pokemon::domain::command::Command::SetupLoan;
 use pokemon::domain::command::Setup;
 use pokemon::domain::pokemon::PokemonAggregate;
@@ -119,6 +121,8 @@ impl Steps {
         if loan.inner().is_waiting_for_loan() {
             let _ = manager.handle_command(loan, SetLoanAsCreated).await;
         }
+
+        row.id
     }
 
     pub async fn pay_deposit(
