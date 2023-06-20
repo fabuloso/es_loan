@@ -7,7 +7,7 @@ use es_loan::domain::command::Command::SetLoanAsCreated;
 use es_loan::domain::command::Command::SetupLoan;
 use es_loan::domain::command::Setup;
 use es_loan::domain::loan::LoanAggregate;
-use es_loan::domain::loan::LoanState;
+use es_loan::domain::loan_state::LoanState;
 use es_loan::handler::authorization_view::AuthorizationView;
 use es_loan::handler::authorization_view_listener::AuthorizationViewListener;
 use es_loan::handler::setup_view::SetupView;
@@ -42,8 +42,7 @@ async fn main() {
         .try_build()
         .await
         .unwrap();
-    // Convalidare l'univocita' del comando
-    // Come gestiamo la saga
+
     let manager = AggregateManager::new(store);
 
     let aggregate_id: Uuid = Uuid::new_v4();
