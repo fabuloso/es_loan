@@ -55,11 +55,7 @@ async fn main() {
     let token = authorize_service.authorize().await;
     let nonce = setup_service.setup(token).await;
     let loan_id = create_loan_service.create_loan(nonce).await;
-
-    // let auth_token = Steps::authorize(&manager, aggregate_id).await;
 }
-
-struct Steps;
 
 pub async fn new_pool() -> Pool<Postgres> {
     PgPoolOptions::new()

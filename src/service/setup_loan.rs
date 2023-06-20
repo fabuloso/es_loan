@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use crate::domain::command::Setup;
 use crate::{domain::command::Command::SetupLoan, handler::authorization_view::AuthorizationView};
-use esrs::{manager::AggregateManager, store::postgres::PgStore, AggregateState};
+use esrs::{manager::AggregateManager, store::postgres::PgStore};
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
-use crate::domain::{aggregate::LoanAggregate, loan_state::LoanState};
+use crate::domain::aggregate::LoanAggregate;
 
 pub struct SetupLoanService {
     pub manager: Arc<AggregateManager<PgStore<LoanAggregate>>>,
