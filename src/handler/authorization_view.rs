@@ -16,8 +16,6 @@ pub struct AuthorizationView {
 
 impl AuthorizationView {
     pub async fn new(table_name: &str, pool: &Pool<Postgres>) -> Self {
-        let table_name: String = format!("{}_{}", "example", table_name);
-
         let query: String = format!(
             "CREATE TABLE IF NOT EXISTS {} (id uuid PRIMARY KEY NOT NULL, token uuid, amount VARCHAR, product VARCHAR)",
             table_name
@@ -25,7 +23,9 @@ impl AuthorizationView {
 
         let _ = sqlx::query(query.as_str()).execute(pool).await.unwrap();
 
-        Self { table_name }
+        Self {
+            table_name: table_name.to_string(),
+        }
     }
 
     pub async fn by_token(

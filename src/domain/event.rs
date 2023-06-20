@@ -5,8 +5,6 @@ use uuid::Uuid;
 pub enum LoanEvent {
     LoanAuthorized(Authorized),
     LoanSetup(Setup),
-    PokemonReleased(Released),
-    PokemonFucked(Fucked),
     AskedForDeposit,
     DepositPayed,
     LoanSubmitted,

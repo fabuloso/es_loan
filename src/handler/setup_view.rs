@@ -19,8 +19,6 @@ pub struct SetupView {
 
 impl SetupView {
     pub async fn new(table_name: &str, pool: &Pool<Postgres>) -> Self {
-        let table_name: String = format!("{}_{}", "culo", table_name);
-
         let query: String = format!(
             "CREATE TABLE IF NOT EXISTS {} (id uuid PRIMARY KEY NOT NULL,nonce uuid, token uuid, amount VARCHAR, product VARCHAR, bank_account VARCHAR, braintree_token VARCHAR)",
             table_name
@@ -28,7 +26,9 @@ impl SetupView {
 
         let _ = sqlx::query(query.as_str()).execute(pool).await.unwrap();
 
-        Self { table_name }
+        Self {
+            table_name: table_name.to_string(),
+        }
     }
 
     pub async fn by_nonce(

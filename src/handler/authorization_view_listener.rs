@@ -19,7 +19,8 @@ impl EventHandler<LoanAggregate> for AuthorizationViewListener {
     async fn handle(&self, event: &StoreEvent<LoanEvent>) {
         match event.payload() {
             LoanEvent::LoanAuthorized(payload) => {
-                self.view
+                let _ = self
+                    .view
                     .upsert(
                         event.aggregate_id,
                         payload.authorization_token,

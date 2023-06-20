@@ -1,18 +1,18 @@
+use es_loan::domain::command::Authorize;
+use es_loan::domain::command::Command::AskForDeposit;
+use es_loan::domain::command::Command::AskForLoan;
+use es_loan::domain::command::Command::AuthorizeLoan;
+use es_loan::domain::command::Command::SetDepositAsPayed;
+use es_loan::domain::command::Command::SetLoanAsCreated;
+use es_loan::domain::command::Command::SetupLoan;
+use es_loan::domain::command::Setup;
+use es_loan::domain::loan::LoanAggregate;
+use es_loan::domain::loan::LoanState;
+use es_loan::handler::authorization_view::AuthorizationView;
+use es_loan::handler::authorization_view_listener::AuthorizationViewListener;
+use es_loan::handler::setup_view::SetupView;
+use es_loan::handler::setup_view_listener::SetupViewListener;
 use esrs::AggregateState;
-use pokemon::domain::command::Authorize;
-use pokemon::domain::command::Command::AskForDeposit;
-use pokemon::domain::command::Command::AskForLoan;
-use pokemon::domain::command::Command::AuthorizeLoan;
-use pokemon::domain::command::Command::SetDepositAsPayed;
-use pokemon::domain::command::Command::SetLoanAsCreated;
-use pokemon::domain::command::Command::SetupLoan;
-use pokemon::domain::command::Setup;
-use pokemon::domain::loan::LoanAggregate;
-use pokemon::domain::loan::LoanState;
-use pokemon::handler::authorization_view::AuthorizationView;
-use pokemon::handler::authorization_view_listener::AuthorizationViewListener;
-use pokemon::handler::setup_view::SetupView;
-use pokemon::handler::setup_view_listener::SetupViewListener;
 use sqlx::postgres::PgPoolOptions;
 
 use sqlx::{Pool, Postgres};
@@ -123,40 +123,6 @@ impl Steps {
         }
 
         row.id
-    }
-
-    pub async fn pay_deposit(
-        manager: &AggregateManager<PgStore<LoanAggregate>>,
-        aggregate_id: Uuid,
-    ) {
-        Self::ask_for_deposit(manager, aggregate_id).await;
-        Self::set_as_payed_deposit(manager, aggregate_id).await;
-    }
-
-    async fn ask_for_deposit(
-        manager: &AggregateManager<PgStore<LoanAggregate>>,
-        aggregate_id: Uuid,
-    ) {
-        let state = manager.load(aggregate_id).await.unwrap().unwrap();
-
-        dbg!(&state);
-
-        let command = AskForDeposit;
-
-        let _ = manager.handle_command(state, command).await;
-    }
-
-    async fn set_as_payed_deposit(
-        manager: &AggregateManager<PgStore<LoanAggregate>>,
-        aggregate_id: Uuid,
-    ) {
-        let state = manager.load(aggregate_id).await.unwrap().unwrap();
-
-        dbg!(&state);
-
-        let command = SetDepositAsPayed;
-
-        let _ = manager.handle_command(state, command).await;
     }
 }
 

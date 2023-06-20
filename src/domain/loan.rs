@@ -108,7 +108,7 @@ impl Default for LoanState {
 }
 
 impl Aggregate for LoanAggregate {
-    const NAME: &'static str = "Pokemon";
+    const NAME: &'static str = "Loan";
     type State = LoanState;
     type Command = command::Command;
     type Event = event::LoanEvent;
@@ -144,8 +144,6 @@ impl Aggregate for LoanAggregate {
             LoanEvent::LoanSetup(payload) => {
                 state.setup(payload.bank_account, payload.braintree_token)
             }
-            LoanEvent::PokemonReleased(_) => state.released(),
-            LoanEvent::PokemonFucked(_) => todo!(),
             LoanEvent::AskedForDeposit => state.asked_for_deposit(),
             LoanEvent::DepositPayed => state.deposit_payed(),
             LoanEvent::LoanSubmitted => state.loan_submitted(),
