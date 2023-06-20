@@ -5,7 +5,8 @@ pub enum Command {
     SetupLoan(Setup),
     AskForDeposit,
     SetDepositAsPayed,
-    CreateLoan,
+    AskForLoan,
+    SetLoanAsCreated,
 }
 
 pub struct Authorize {

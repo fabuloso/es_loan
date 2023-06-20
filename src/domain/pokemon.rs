@@ -16,6 +16,14 @@ pub struct PokemonState {
 }
 
 impl PokemonState {
+    pub fn is_waiting_for_deposit(&self) -> bool {
+        self.status == "Waiting for Deposit"
+    }
+
+    pub fn is_not_already_payed(&self) -> bool {
+        self.status == "Setup"
+    }
+
     pub fn captured(&self, name: String) -> Self {
         Self {
             status: "Captured".to_string(),
@@ -117,9 +125,8 @@ impl Aggregate for PokemonAggregate {
             })]),
             command::Command::AskForDeposit => Ok(vec![PokemonEvent::AskedForDeposit]),
             command::Command::SetDepositAsPayed => Ok(vec![PokemonEvent::DepositPayed]),
-            command::Command::CreateLoan => {
-                Ok(vec![PokemonEvent::LoanSubmitted, PokemonEvent::LoanCreated])
-            }
+            command::Command::AskForLoan => Ok(vec![PokemonEvent::LoanSubmitted]),
+            command::Command::SetLoanAsCreated => Ok(vec![PokemonEvent::LoanCreated]),
         }
     }
 

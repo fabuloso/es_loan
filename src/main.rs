@@ -2,7 +2,6 @@ use esrs::AggregateState;
 use pokemon::domain::command::Authorize;
 use pokemon::domain::command::Command::AskForDeposit;
 use pokemon::domain::command::Command::AuthorizeLoan;
-use pokemon::domain::command::Command::CreateLoan;
 use pokemon::domain::command::Command::SetDepositAsPayed;
 use pokemon::domain::command::Command::SetupLoan;
 use pokemon::domain::command::Setup;
@@ -23,10 +22,10 @@ use uuid::Uuid;
 #[tokio::main]
 async fn main() {
     let pool: Pool<Postgres> = new_pool().await;
-    let view = SetupView::new("SETUP_VIEW", &pool).await;
+    let setup_view = SetupView::new("SETUP_VIEW", &pool).await;
     let setup_listener = SetupViewListener {
         pool: pool.clone(),
-        view: view.clone(),
+        view: setup_view.clone(),
     };
 
     let view = AuthorizationView::new("AUTHORIZATION_VIEW", &pool).await;
@@ -48,11 +47,8 @@ async fn main() {
     let aggregate_id: Uuid = Uuid::new_v4();
 
     let auth_token = Steps::authorize(&manager, aggregate_id).await;
-
-    Steps::setup(&manager, &view, auth_token, pool).await;
-
-    Steps::pay_deposit(&manager, aggregate_id).await;
-    Steps::create_loan(&manager, aggregate_id).await;
+    let nonce = Steps::setup(&manager, &view, auth_token, pool.clone()).await;
+    Steps::create_loan(&manager, &setup_view, nonce, pool.clone()).await;
 }
 
 struct Steps;
@@ -82,7 +78,7 @@ impl Steps {
         view: &AuthorizationView,
         auth_token: Uuid,
         pool: Pool<Postgres>,
-    ) {
+    ) -> Uuid {
         let row = view.by_token(auth_token, &pool).await.unwrap().unwrap();
         let state = manager.load(row.id).await.unwrap().unwrap();
         let nonce = Uuid::new_v4();
@@ -93,6 +89,36 @@ impl Steps {
         });
 
         let _ = manager.handle_command(state, setup).await;
+        nonce
+    }
+
+    pub async fn create_loan(
+        manager: &AggregateManager<PgStore<PokemonAggregate>>,
+        view: &SetupView,
+        nonce: Uuid,
+        pool: Pool<Postgres>,
+    ) -> Uuid {
+        let row = view.by_nonce(nonce, &pool).await.unwrap().unwrap();
+
+        let loan = manager.load(row.id).await.unwrap().unwrap();
+        if loan.inner().is_not_already_payed() {
+            let _ = manager.handle_command(loan, AskForDeposit).await;
+        }
+
+        let loan = manager.load(row.id).await.unwrap().unwrap();
+        if loan.inner().is_waiting_for_deposit() {
+            let _ = manager.handle_command(loan, SetDepositAsPayed).await;
+        }
+
+        let loan = manager.load(row.id).await.unwrap().unwrap();
+        if loan.inner().is_deposit_payed() {
+            let _ = manager.handle_command(loan, AskForLoan).await;
+        }
+
+        let loan = manager.load(row.id).await.unwrap().unwrap();
+        if loan.inner().is_waiting_for_loan() {
+            let _ = manager.handle_command(loan, SetLoanAsCreated).await;
+        }
     }
 
     pub async fn pay_deposit(
@@ -125,19 +151,6 @@ impl Steps {
         dbg!(&state);
 
         let command = SetDepositAsPayed;
-
-        let _ = manager.handle_command(state, command).await;
-    }
-
-    pub async fn create_loan(
-        manager: &AggregateManager<PgStore<PokemonAggregate>>,
-        aggregate_id: Uuid,
-    ) {
-        let state = manager.load(aggregate_id).await.unwrap().unwrap();
-
-        dbg!(&state);
-
-        let command = CreateLoan;
 
         let _ = manager.handle_command(state, command).await;
     }
