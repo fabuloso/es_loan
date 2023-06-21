@@ -13,6 +13,7 @@ impl LoanState {
     pub fn is_authorization_expired(&self) -> bool {
         self.auth_datetime + Duration::seconds(10) > Local::now().naive_local()
     }
+
     pub fn is_waiting_for_deposit(&self) -> bool {
         self.status == "Waiting for Deposit"
     }
